@@ -65,15 +65,15 @@
 <body>
     <h1>Asana Task Creator</h1>
     
-    <form id="asanaForm" autocomplete="on">
+    <form id="asanaForm" method="post" action="javascript:void(0);" autocomplete="on">
         <div class="form-group">
             <label for="apiKey">API Key:</label>
             <input 
                 type="password" 
-                id="apiKey" 
-                name="apiKey"
-                data-bwtype="password"
-                placeholder="Jouw Asana API Key" />
+                id="password"
+                name="password"
+                placeholder="Jouw Asana API Key"
+                autocomplete="current-password" />
             <div id="savedApiKeyInfo" class="small-text"></div>
         </div>
 
@@ -81,10 +81,10 @@
             <label for="workspaceId">Workspace ID:</label>
             <input 
                 type="text" 
-                id="workspaceId" 
-                name="workspaceId"
-                data-bwtype="username"
-                placeholder="Workspace ID" />
+                id="username"
+                name="username"
+                placeholder="Workspace ID"
+                autocomplete="username" />
             <div id="savedWorkspaceInfo" class="small-text"></div>
         </div>
 
@@ -153,8 +153,8 @@
         }
 
         async function createTask() {
-            const apiKey = document.getElementById('apiKey').value;
-            const workspaceId = document.getElementById('workspaceId').value;
+            const apiKey = document.getElementById('password').value;
+            const workspaceId = document.getElementById('username').value;
             const taskType = document.getElementById('taskType').value;
             const projectId = document.getElementById('projectId').value;
             const taskName = document.getElementById('taskName').value;
