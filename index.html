@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Asana Task Creator</title>
     <style>
+        /* ... bestaande styles blijven hetzelfde ... */
         body {
             font-family: Arial, sans-serif;
             max-width: 600px;
@@ -64,40 +65,54 @@
 <body>
     <h1>Asana Task Creator</h1>
     
-    <div class="form-group">
-        <label for="apiKey">API Key:</label>
-        <input type="text" id="apiKey" placeholder="Jouw Asana API Key" />
-        <div id="savedApiKeyInfo" class="small-text"></div>
-    </div>
+    <form id="asanaForm" autocomplete="on">
+        <div class="form-group">
+            <label for="apiKey">API Key:</label>
+            <input 
+                type="text" 
+                id="apiKey" 
+                name="apiKey"
+                autocomplete="current-password"
+                data-lpignore="false"
+                placeholder="Jouw Asana API Key" />
+            <div id="savedApiKeyInfo" class="small-text"></div>
+        </div>
 
-    <div class="form-group">
-        <label for="workspaceId">Workspace ID:</label>
-        <input type="text" id="workspaceId" placeholder="Workspace ID" />
-        <div id="savedWorkspaceInfo" class="small-text"></div>
-    </div>
+        <div class="form-group">
+            <label for="workspaceId">Workspace ID:</label>
+            <input 
+                type="text" 
+                id="workspaceId" 
+                name="workspaceId"
+                autocomplete="username"
+                data-lpignore="false"
+                placeholder="Workspace ID" />
+            <div id="savedWorkspaceInfo" class="small-text"></div>
+        </div>
 
-    <div class="form-group">
-        <label for="taskType">Type taak:</label>
-        <select id="taskType" onchange="toggleProjectField()">
-            <option value="my_tasks">Mijn Taken</option>
-            <option value="project">Project Taak</option>
-        </select>
-    </div>
+        <div class="form-group">
+            <label for="taskType">Type taak:</label>
+            <select id="taskType" onchange="toggleProjectField()">
+                <option value="my_tasks">Mijn Taken</option>
+                <option value="project">Project Taak</option>
+            </select>
+        </div>
 
-    <div class="form-group hidden" id="projectIdGroup">
-        <label for="projectId">Project ID:</label>
-        <input type="text" id="projectId" placeholder="Project ID" />
-    </div>
+        <div class="form-group hidden" id="projectIdGroup">
+            <label for="projectId">Project ID:</label>
+            <input type="text" id="projectId" placeholder="Project ID" />
+        </div>
 
-    <div class="form-group">
-        <label for="taskName">Taaknaam:</label>
-        <input type="text" id="taskName" placeholder="Voer taaknaam in" />
-    </div>
+        <div class="form-group">
+            <label for="taskName">Taaknaam:</label>
+            <input type="text" id="taskName" placeholder="Voer taaknaam in" />
+        </div>
 
-    <div class="form-group">
-        <label for="taskDescription">Beschrijving:</label>
-        <textarea id="taskDescription" rows="4" placeholder="Voer taakbeschrijving in"></textarea>
-    </div>
+        <div class="form-group">
+            <label for="taskDescription">Beschrijving:</label>
+            <textarea id="taskDescription" rows="4" placeholder="Voer taakbeschrijving in"></textarea>
+        </div>
+    </form>
 
     <button onclick="createTask()">Taak Aanmaken</button>
     <button onclick="clearSavedData()" style="background-color: #dc3545;">Wis Opgeslagen Data</button>
@@ -105,6 +120,7 @@
     <div id="result"></div>
 
     <script>
+        // ... bestaande JavaScript code blijft hetzelfde ...
         // Load saved data when page loads
         window.onload = function() {
             const savedApiKey = localStorage.getItem('asanaApiKey');
