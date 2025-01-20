@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asana Task Creator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"], 
+        textarea, 
+        select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #14aaf5;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0088cc;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        .error {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+        .hidden {
+            display: none;
+        }
+        .small-text {
+            font-size: 0.8em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>Asana Task Creator</h1>
+    
+    <div class="form-group">
+        <label for="apiKey">API Key:</label>
+        <input type="text" id="apiKey" placeholder="Jouw Asana API Key" />
+        <div id="savedApiKeyInfo" class="small-text"></div>
+    </div>
+
+    <div class="form-group">
+        <label for="workspaceId">Workspace ID:</label>
+        <input type="text" id="workspaceId" placeholder="Workspace ID" />
+        <div id="savedWorkspaceInfo" class="small-text"></div>
+    </div>
+
+    <div class="form-group">
+        <label for="taskType">Type taak:</label>
+        <select id="taskType" onchange="toggleProjectField()">
+            <option value="my_tasks">Mijn Taken</option>
+            <option value="project">Project Taak</option>
+        </select>
+    </div>
+
+    <div class="form-group hidden" id="projectIdGroup">
+        <label for="projectId">Project ID:</label>
+        <input type="text" id="projectId" placeholder="Project ID" />
+    </div>
+
+    <div class="form-group">
+        <label for="taskName">Taaknaam:</label>
+        <input type="text" id="taskName" placeholder="Voer taaknaam in" />
+    </div>
+
+    <div class="form-group">
+        <label for="taskDescription">Beschrijving:</label>
+        <textarea id="taskDescription" rows="4" placeholder="Voer taakbeschrijving in"></textarea>
+    </div>
+
+    <button onclick="createTask()">Taak Aanmaken</button>
+    <button onclick="clearSavedData()" style="background-color: #dc3545;">Wis Opgeslagen Data</button>
+
+    <div id="result"></div>
+
+    <script>
+        // Load saved data when page loads
+        window.onload = function() {
+            const savedApiKey = localStorage.getItem('asanaApiKey');
+            const savedWorkspaceId = localStorage.getItem('asanaWorkspaceId');
+            
+            if (savedApiKey) {
+                document.getElementById('apiKey').value = savedApiKey;
+                document.getElementById('savedApiKeyInfo').textContent = 'API Key is opgeslagen';
+            }
+            
+            if (savedWorkspaceId) {
+                document.getElementById('workspaceId').value = savedWorkspaceId;
+                document.getElementById('savedWorkspaceInfo').textContent = 'Workspace ID is opgeslagen';
+            }
+        }
+
+        function clearSavedData() {
+            localStorage.removeItem('asanaApiKey');
+            localStorage.removeItem('asanaWorkspaceId');
+            document.getElementById('apiKey').value = '';
+            document.getElementById('workspaceId').value = '';
+            document.getElementById('savedApiKeyInfo').textContent = '';
+            document.getElementById('savedWorkspaceInfo').textContent = '';
+            document.getElementById('result').textContent = 'Opgeslagen data is gewist';
+            document.getElementById('result').className = 'success';
+        }
+
+        function toggleProjectField() {
+            const taskType = document.getElementById('taskType').value;
+            const projectIdGroup = document.getElementById('projectIdGroup');
+            projectIdGroup.className = taskType === 'project' ? 'form-group' : 'form-group hidden';
+        }
+
+        async function createTask() {
+            const apiKey = document.getElementById('apiKey').value;
+            const workspaceId = document.getElementById('workspaceId').value;
+            const taskType = document.getElementById('taskType').value;
+            const projectId = document.getElementById('projectId').value;
+            const taskName = document.getElementById('taskName').value;
+            const taskDescription = document.getElementById('taskDescription').value;
+            const resultDiv = document.getElementById('result');
+
+            // Save API key and workspace ID
+            if (apiKey) localStorage.setItem('asanaApiKey', apiKey);
+            if (workspaceId) localStorage.setItem('asanaWorkspaceId', workspaceId);
+
+            if (!apiKey || !workspaceId || !taskName) {
+                resultDiv.className = 'error';
+                resultDiv.textContent = 'Vul alle verplichte velden in';
+                return;
+            }
+
+            if (taskType === 'project' && !projectId) {
+                resultDiv.className = 'error';
+                resultDiv.textContent = 'Project ID is verplicht voor project taken';
+                return;
+            }
+
+            try {
+                // Eerst halen we de user informatie op
+                const userResponse = await fetch('https://app.asana.com/api/1.0/users/me', {
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`
+                    }
+                });
+                
+                const userData = await userResponse.json();
+                if (!userResponse.ok) {
+                    throw new Error(userData.errors?.[0]?.message || 'Kan gebruiker niet ophalen');
+                }
+
+                const userId = userData.data.gid;
+
+                // Dan maken we de taak aan
+                const taskData = {
+                    data: {
+                        name: taskName,
+                        notes: taskDescription,
+                        workspace: workspaceId,
+                        assignee: userId
+                    }
+                };
+
+                if (taskType === 'project') {
+                    taskData.data.projects = [projectId];
+                }
+
+                const response = await fetch('https://app.asana.com/api/1.0/tasks', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify(taskData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.className = 'success';
+                    resultDiv.textContent = 'Taak succesvol aangemaakt!';
+                    
+                    // Update saved info text
+                    document.getElementById('savedApiKeyInfo').textContent = 'API Key is opgeslagen';
+                    document.getElementById('savedWorkspaceInfo').textContent = 'Workspace ID is opgeslagen';
+                    
+                    // Reset form
+                    document.getElementById('taskName').value = '';
+                    document.getElementById('taskDescription').value = '';
+                } else {
+                    throw new Error(data.errors?.[0]?.message || 'Er is een fout opgetreden');
+                }
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.textContent = `Fout: ${error.message}`;
+            }
+        }
+
+        // Initialize the form
+        toggleProjectField();
+    </script>
+</body>
+</html>
